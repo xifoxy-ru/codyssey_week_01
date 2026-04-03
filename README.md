@@ -1,7 +1,7 @@
 # 개발 워크스테이션 구축 미션
 
-> 이 문서는 `~/__dev/codyssey_week_01` 디렉토리에서 작업한 내용을 기준으로 작성되었습니다.  
-> 현재는 **1단계 터미널 기본 조작**, **2단계 파일 권한 실습**까지 반영되어 있으며, 이후 Docker/Git 항목을 계속 이어서 추가할 예정입니다.
+> 이 문서는 `$BASE_DIRECTORY` 디렉토리에서 작업한 내용을 기준으로 작성되었습니다.  
+> 현재 문서는 **터미널 기본 조작**, **파일 권한 실습**, 그리고 **Docker 기본 점검/운영/커스텀 이미지/포트 매핑/바인드 마운트/볼륨 영속성**까지 이어서 정리할 수 있도록 작성되었습니다.
 
 ---
 
@@ -9,46 +9,65 @@
 
 이 과제의 목표는 터미널, Docker, Git/GitHub를 활용하여 재현 가능한 개발 워크스테이션 환경을 직접 구축하고, 그 과정과 결과를 기술 문서로 정리하는 것입니다.
 
-현재까지 진행한 범위는 다음과 같습니다.
-- 터미널 기본 조작 자동화 스크립트 작성
-- 실행 결과 로그 파일 기록
-- 파일 및 디렉토리 권한 실습 자동화
-- README 구조를 제출용 형식으로 확장
+이번 미션에서는 다음 흐름을 중심으로 작업을 진행합니다.
+
+- 터미널로 작업 디렉토리 및 파일을 다루는 기본 조작 수행
+- 파일과 디렉토리의 권한 확인 및 변경 실습
+- Docker 설치 및 데몬 동작 여부 점검
+- hello-world 및 ubuntu 컨테이너 실행과 기본 운영 명령 확인
+- Dockerfile 기반 커스텀 이미지 제작
+- 포트 매핑을 통한 브라우저 접속 확인
+- 바인드 마운트로 호스트 변경 사항이 컨테이너에 즉시 반영되는지 검증
+- Docker 볼륨을 이용한 데이터 영속성 확인
 
 ---
 
 ## 2. 실행 환경
 
-아래 정보는 실제 실행 후 결과에 맞게 업데이트합니다.
-- OS: macOS
-- Shell: bash
-- Terminal: iTerm2 또는 macOS Terminal
-- Docker: 추후 작성 예정
-- Git: 추후 작성 예정
+아래 정보는 실제 실행 후 결과에 맞게 업데이트한다.
 
-버전 확인 명령 예시:
+- OS: macOS
+- Shell: bash 또는 zsh
+- Terminal: iTerm2 또는 macOS Terminal
+- Docker: 실제 실행 후 버전 기입
+- Git: 실제 실행 후 버전 기입
+
+버전 확인 명령:
 
 ```bash
-uname -a
-echo $SHELL
+sw_vers -productVersion
+echo "$(basename "${SHELL:-unknown}")"
 docker --version
 git --version
 ```
+
+실행 결과 기록 예시:
+
+```bash
+os: mac 15.7.4
+shell: zsh
+docker: 28.5.2
+git: 2.53.0
+```
+
+> `entry.sh` 는 실행 시작 시 OS, shell, Docker, Git 버전을 출력한 뒤 하위 스크립트들의 실행 권한을 부여하고 `start.sh` 를 호출한다.
 
 ---
 
 ## 3. 수행 체크리스트
 
+> 아래 체크리스트는 실제 실행과 로그 확보 후 최종 제출 직전에 다시 점검한다.
+
 - [x] 터미널 기본 조작 및 폴더 구성
 - [x] 파일 권한 실습
-- [ ] Docker 설치 및 기본 점검
-- [ ] hello-world 실행
-- [ ] ubuntu 컨테이너 실행 및 내부 명령 확인
-- [ ] Docker 기본 운영 명령 확인
-- [ ] Dockerfile 기반 커스텀 이미지 제작
-- [ ] 포트 매핑 검증
-- [ ] 바인드 마운트 검증
-- [ ] 볼륨 영속성 검증
+- [x] Docker 설치 및 기본 점검
+- [x] hello-world 실행
+- [x] ubuntu 컨테이너 실행 및 내부 명령 확인
+- [x] Docker 기본 운영 명령 확인
+- [x] Dockerfile 기반 커스텀 이미지 제작
+- [x] 포트 매핑 검증
+- [x] 바인드 마운트 검증
+- [x] 볼륨 영속성 검증
 - [ ] Git 설정
 - [ ] GitHub / VSCode 연동
 - [ ] 트러블슈팅 2건 이상 정리
@@ -57,45 +76,71 @@ git --version
 
 ## 4. 1단계: 터미널 기본 조작
 
-### 4-1. 사용 스크립트
+### 4-1. 실행 구조
 
-터미널 기본 조작은 `run_step.sh` 스크립트로 자동화했다.
+이 프로젝트의 상위 실행 진입점은 `entry.sh` 이다.
 
 실행 방법:
 
 ```bash
-chmod +x run_step.sh
-./run_step.sh
+chmod +x entry.sh start.sh
+./entry.sh
+```
+
+실행 흐름:
+
+1. `entry.sh`
+   - 실행 환경(OS, shell, Docker, Git) 출력
+   - 하위 스크립트에 실행 권한 부여
+   - `start.sh` 호출
+2. `start.sh`
+   - 어떤 단계 스크립트를 실행할지 제어
+3. `00_cli/run_cli.sh`
+   - 터미널 기본 조작 1단계를 실제로 수행
+
+> 현재 업로드된 `start.sh` 기준으로는 `00_cli/run_cli.sh` 와 `01_permission/run_permission.sh` 는 주석 처리되어 있고, `02_docker/00_run_docker_check.sh` 만 실행되도록 설정되어 있다. 최종 제출 전에는 실제 실행 순서에 맞게 주석 상태를 확인해 README와 일치시킨다.
+
+---
+
+### 4-2. 1단계 실제 수행 스크립트
+
+터미널 기본 조작 자체는 `00_cli/run_cli.sh` 스크립트로 구현했다.
+
+직접 실행 예시:
+
+```bash
+chmod +x 00_cli/run_cli.sh
+./00_cli/run_cli.sh
 ```
 
 실행 결과는 아래 파일에 기록된다.
 
 ```bash
-~/__dev/codyssey_week_01/terminal_cli
+00_cli/cli_log
 ```
 
 ---
 
-### 4-2. 스크립트 동작 개요
+### 4-3. 스크립트 동작 개요
 
-이 스크립트는 다음 순서로 실행된다.
+`00_cli/run_cli.sh` 는 다음 순서로 실행된다.
 
 1. 현재 위치 확인
-2. 작업 디렉토리 생성
+2. `answer_directory` 폴더 생성
 3. 전체 파일 목록 확인
-4. 빈 파일 생성
-5. 파일 복사
-6. 파일 이름 변경
-7. 파일 삭제 후 목록 확인
-8. 로그 파일 내용 확인
+4. `test` 빈 파일 생성
+5. `test_copy` 파일 복사
+6. `test_renamed` 로 이름 변경
+7. `test`, `test_renamed` 삭제
+8. `cli_log` 파일 내용 확인
 
 각 단계는 엔터 입력 후 실행되며, 화면 출력과 동시에 로그 파일에도 결과를 남긴다.
 
 ---
 
-### 4-3. 수행 명령 및 확인 항목
+### 4-4. 수행 명령 및 확인 항목
 
-#### 4-3-1. 현재 위치 확인
+#### 4-4-1. 현재 위치 확인
 
 ```bash
 pwd
@@ -104,18 +149,24 @@ pwd
 예상 출력:
 
 ```bash
-/Users/xifoxy.ru1115/__dev/codyssey_week_01
+<프로젝트>/00_cli
 ```
 
-> `run_step.sh` 내부에서 `cd "$BASE"`를 수행하므로, `pwd` 결과가 작업 디렉토리 기준으로 맞춰지도록 구성했다.
+예시:
+
+```bash
+$BASE_DIRECTORY/$00_cli
+```
+
+> `run_cli.sh` 내부에서 `BASE="$(cd "$(dirname "$0")" && pwd)"` 와 `cd "$BASE"` 를 수행하므로, `pwd` 결과는 항상 `run_cli.sh` 가 위치한 디렉토리 기준으로 맞춰진다.
 
 ---
 
-#### 4-3-2. 작업 디렉토리 생성
+#### 4-4-2. 작업 디렉토리 생성
 
 ```bash
-mkdir -p ~/__dev/codyssey_week_01/answer_directory
-ls -la ~/__dev/codyssey_week_01 | grep answer_directory
+mkdir -p "$BASE/answer_directory"
+ls -la "$BASE" | grep answer_directory
 ```
 
 예상 출력:
@@ -126,10 +177,10 @@ drwxr-xr-x  ... answer_directory
 
 ---
 
-#### 4-3-3. 전체 파일 목록 확인
+#### 4-4-3. 전체 파일 목록 확인
 
 ```bash
-ls -la ~/__dev/codyssey_week_01
+ls -la "$BASE"
 ```
 
 예상 출력:
@@ -138,31 +189,31 @@ ls -la ~/__dev/codyssey_week_01
 .
 ..
 answer_directory
-terminal_cli
+cli_log
 ```
 
 ---
 
-#### 4-3-4. 빈 파일 생성
+#### 4-4-4. 빈 파일 생성
 
 ```bash
-touch ~/__dev/codyssey_week_01/test
-ls -la ~/__dev/codyssey_week_01/test
+touch "$BASE/test"
+ls -la "$BASE/test"
 ```
 
 예상 출력:
 
 ```bash
--rw-r--r--  ... /Users/xifoxy.ru1115/__dev/codyssey_week_01/test
+-rw-r--r--  ... test
 ```
 
 ---
 
-#### 4-3-5. 파일 복사
+#### 4-4-5. 파일 복사
 
 ```bash
-cp ~/__dev/codyssey_week_01/test ~/__dev/codyssey_week_01/test_copy
-ls -la ~/__dev/codyssey_week_01 | grep test
+cp "$BASE/test" "$BASE/test_copy"
+ls -la "$BASE" | grep test
 ```
 
 예상 출력:
@@ -174,11 +225,11 @@ ls -la ~/__dev/codyssey_week_01 | grep test
 
 ---
 
-#### 4-3-6. 파일 이름 변경
+#### 4-4-6. 파일 이름 변경
 
 ```bash
-mv ~/__dev/codyssey_week_01/test_copy ~/__dev/codyssey_week_01/test_renamed
-ls -la ~/__dev/codyssey_week_01 | grep test
+mv "$BASE/test_copy" "$BASE/test_renamed"
+ls -la "$BASE" | grep test
 ```
 
 예상 출력:
@@ -190,11 +241,11 @@ ls -la ~/__dev/codyssey_week_01 | grep test
 
 ---
 
-#### 4-3-7. 파일 삭제 후 목록 확인
+#### 4-4-7. 파일 삭제 후 목록 확인
 
 ```bash
-rm ~/__dev/codyssey_week_01/test_renamed ~/__dev/codyssey_week_01/test
-ls -la ~/__dev/codyssey_week_01
+rm -f "$BASE/test_renamed" "$BASE/test"
+ls -la "$BASE"
 ```
 
 예상 출력:
@@ -203,35 +254,36 @@ ls -la ~/__dev/codyssey_week_01
 .
 ..
 answer_directory
-terminal_cli
+cli_log
 ```
 
 ---
 
-#### 4-3-8. 로그 파일 내용 확인
+#### 4-4-8. 로그 파일 내용 확인
 
 ```bash
-cat ~/__dev/codyssey_week_01/terminal_cli
+cat 00_cli/cli_log
 ```
 
 예상 출력:
 
 ```bash
-=== pwd 현재 위치 ===
-/Users/xifoxy.ru1115/__dev/codyssey_week_01
+=== 1단계: [pwd] 현재 위치 ===
+$ pwd
+/Users/사용자이름/__dev/codyssey_week_01/00_cli
 
-=== mkdir 파일생성 ===
+=== 2단계: [mkdir answer_directory] 폴더 생성 ===
+$ mkdir -p "$BASE/answer_directory" && ls -la "$BASE" | grep answer_directory
 drwxr-xr-x ... answer_directory
 ```
 
-> 실제 로그에는 각 단계의 결과가 누적된다.
+> 실제 로그에는 각 단계의 명령과 출력 결과가 순서대로 누적된다.
 
 ---
 
-### 4-4. 로그 파일 생성 방식
+### 4-5. 로그 파일 생성 방식
 
-스크립트는 기존 `terminal_cli` 파일을 삭제한 뒤, 각 단계마다 `>> "$LOG"` 방식으로 다시 기록한다.  
-즉, 실행할 때마다 이전 로그를 초기화하고 새 로그를 누적 생성하는 구조이다.
+`00_cli/run_cli.sh` 는 실행 시작 시 `: > "$LOG"` 로 기존 로그 파일을 초기화한 뒤, 각 단계마다 `tee -a "$LOG"` 를 사용해 화면 출력과 로그 기록을 동시에 수행한다. 따라서 매번 동일한 절차를 새 로그로 다시 검증할 수 있다.
 
 ---
 
@@ -241,17 +293,10 @@ drwxr-xr-x ... answer_directory
 
 파일 및 디렉토리 권한 실습은 `run_permission.sh` 스크립트로 진행했다.
 
-실행 방법:
-
-```bash
-chmod +x run_permission.sh
-./run_permission.sh
-```
-
 실행 결과는 아래 파일에 기록된다.
 
 ```bash
-~/__dev/codyssey_week_01/permission_log
+$BASE_DIRECTORY/01_permission/permission_log
 ```
 
 ---
@@ -272,16 +317,16 @@ chmod +x run_permission.sh
 #### 5-3-1. 실습용 파일/디렉토리 생성
 
 ```bash
-touch ~/__dev/codyssey_week_01/permission_test_file
-mkdir -p ~/__dev/codyssey_week_01/permission_test_dir
-ls -ld ~/__dev/codyssey_week_01/permission_test_file ~/__dev/codyssey_week_01/permission_test_dir
+touch $BASE_DIRECTORY/01_permission/permission_test_file
+mkdir -p $BASE_DIRECTORY/01_permission/permission_test_dir
+ls -ld $BASE_DIRECTORY/01_permission/permission_test_file $BASE_DIRECTORY/01_permission/permission_test_dir
 ```
 
 예시 출력:
 
 ```bash
--rw-r--r--  ... /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_file
-drwxr-xr-x  ... /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_dir
+-rw-r--r--  ... $BASE_DIRECTORY/01_permission/permission_test_file
+drwxr-xr-x  ... $BASE_DIRECTORY/01_permission/permission_test_dir
 ```
 
 ---
@@ -289,14 +334,14 @@ drwxr-xr-x  ... /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_dir
 #### 5-3-2. 초기 권한 확인
 
 ```bash
-stat -f "%Sp %N" ~/__dev/codyssey_week_01/permission_test_file ~/__dev/codyssey_week_01/permission_test_dir
+stat -f "%Sp %N" $BASE_DIRECTORY/01_permission/permission_test_file $BASE_DIRECTORY/01_permission/permission_test_dir
 ```
 
 예시 출력:
 
 ```bash
--rw-r--r-- /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_file
-drwxr-xr-x /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_dir
+-rw-r--r-- $BASE_DIRECTORY/01_permission/permission_test_file
+drwxr-xr-x $BASE_DIRECTORY/01_permission/permission_test_dir
 ```
 
 ---
@@ -304,14 +349,14 @@ drwxr-xr-x /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_dir
 #### 5-3-3. 파일 권한을 600으로 변경
 
 ```bash
-chmod 600 ~/__dev/codyssey_week_01/permission_test_file
-stat -f "%Sp %N" ~/__dev/codyssey_week_01/permission_test_file
+chmod 600 $BASE_DIRECTORY/01_permission/permission_test_file
+stat -f "%Sp %N" $BASE_DIRECTORY/01_permission/permission_test_file
 ```
 
 예시 출력:
 
 ```bash
--rw------- /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_file
+-rw------- $BASE_DIRECTORY/01_permission/permission_test_file
 ```
 
 ---
@@ -319,14 +364,14 @@ stat -f "%Sp %N" ~/__dev/codyssey_week_01/permission_test_file
 #### 5-3-4. 파일 권한을 644로 변경
 
 ```bash
-chmod 644 ~/__dev/codyssey_week_01/permission_test_file
-stat -f "%Sp %N" ~/__dev/codyssey_week_01/permission_test_file
+chmod 644 $BASE_DIRECTORY/01_permission/permission_test_file
+stat -f "%Sp %N" $BASE_DIRECTORY/01_permission/permission_test_file
 ```
 
 예시 출력:
 
 ```bash
--rw-r--r-- /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_file
+-rw-r--r-- $BASE_DIRECTORY/01_permission/permission_test_file
 ```
 
 ---
@@ -334,14 +379,14 @@ stat -f "%Sp %N" ~/__dev/codyssey_week_01/permission_test_file
 #### 5-3-5. 디렉토리 권한을 700으로 변경
 
 ```bash
-chmod 700 ~/__dev/codyssey_week_01/permission_test_dir
-stat -f "%Sp %N" ~/__dev/codyssey_week_01/permission_test_dir
+chmod 700 $BASE_DIRECTORY/01_permission/permission_test_dir
+stat -f "%Sp %N" $BASE_DIRECTORY/01_permission/permission_test_dir
 ```
 
 예시 출력:
 
 ```bash
-drwx------ /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_dir
+drwx------ $BASE_DIRECTORY/01_permission/permission_test_dir
 ```
 
 ---
@@ -349,14 +394,14 @@ drwx------ /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_dir
 #### 5-3-6. 디렉토리 권한을 755로 변경
 
 ```bash
-chmod 755 ~/__dev/codyssey_week_01/permission_test_dir
-stat -f "%Sp %N" ~/__dev/codyssey_week_01/permission_test_dir
+chmod 755 $BASE_DIRECTORY/01_permission/permission_test_dir
+stat -f "%Sp %N" $BASE_DIRECTORY/01_permission/permission_test_dir
 ```
 
 예시 출력:
 
 ```bash
-drwxr-xr-x /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_dir
+drwxr-xr-x $BASE_DIRECTORY/01_permission/permission_test_dir
 ```
 
 ---
@@ -389,78 +434,526 @@ drwxr-xr-x /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_dir
 
 ## 6. 3단계: Docker 설치 및 기본 점검
 
-추후 작성 예정.
+### 6-1. 사용 스크립트
 
-예정 항목:
+Docker 설치 및 기본 점검은 `00_run_docker_check.sh` 스크립트로 진행했다.
 
-- `docker --version`
-- `docker info`
-- `docker run hello-world`
+실행 방법:
+
+```bash
+chmod +x $BASE_DIRECTORY/02_docker/00_run_docker_check.sh
+cd $BASE_DIRECTORY/02_docker
+./00_run_docker_check.sh
+```
+
+실행 결과는 아래 파일에 기록된다.
+
+```bash
+$BASE_DIRECTORY/02_docker/docker_check_log
+```
+
+---
+
+### 6-2. 사전 조건
+
+서울캠퍼스 환경에서는 `sudo` 사용이 제한될 수 있으므로, Docker 실행 환경으로 OrbStack을 사용했다.  
+스크립트 실행 전 OrbStack 애플리케이션이 실행 중이어야 한다.
+
+---
+
+### 6-3. Docker 버전 확인
+
+```bash
+docker --version
+```
+
+예시 출력:
+
+```bash
+Docker version XX.XX.X, build XXXXXXX
+```
+
+이 단계에서는 Docker CLI가 정상적으로 설치되어 있는지 확인했다.
+
+---
+
+### 6-4. Docker 데몬 동작 여부 확인
+
+```bash
+docker info
+```
+
+예시 출력:
+
+```bash
+Client:
+ Context:    default
+
+Server:
+ Containers: ...
+ Images: ...
+ Server Version: ...
+```
+
+이 단계에서는 Docker 엔진이 실제로 실행 중인지 확인했다.  
+`docker --version`은 설치 여부만 보여주지만, `docker info`는 데몬이 떠 있어야 정상 동작한다는 점에서 의미가 다르다.
+
+---
+
+### 6-5. 확인 결과 정리
+
+- `docker --version`으로 Docker CLI 확인
+- `docker info`로 Docker 데몬 확인
+- OrbStack 실행 여부가 실제 Docker 사용 가능 여부에 직접 영향을 준다
 
 ---
 
 ## 7. 4단계: Docker 기본 운영 명령
 
-추후 작성 예정.
+이 단계는 `00_run_docker_check.sh` 스크립트에서 함께 수행했다.
 
-예정 항목:
+### 7-1. 이미지 다운로드 및 목록 확인
 
-- `docker images`
-- `docker ps`
-- `docker ps -a`
-- `docker logs`
-- `docker stats --no-stream`
+```bash
+docker run hello-world
+docker pull ubuntu
+docker images
+```
+
+예시 출력:
+
+```bash
+REPOSITORY    TAG       IMAGE ID       CREATED       SIZE
+hello-world   latest    ...            ...           ...
+ubuntu        latest    ...            ...           ...
+```
+
+이 단계에서는 이미지가 로컬에 다운로드되었는지 확인했다.
+
+---
+
+### 7-2. 컨테이너 실행 및 목록 확인
+
+```bash
+docker run -dit --name ubuntu-cli-test ubuntu bash
+docker ps
+docker ps -a
+```
+
+예시 출력:
+
+```bash
+CONTAINER ID   IMAGE    COMMAND   STATUS    NAMES
+...            ubuntu   "bash"    Up ...    ubuntu-cli-test
+```
+
+- `docker ps`는 실행 중인 컨테이너만 보여준다.
+- `docker ps -a`는 종료된 컨테이너까지 포함해 전체를 보여준다.
+
+---
+
+### 7-3. 로그 확인
+
+```bash
+docker logs hello-world-test
+```
+
+예시 출력:
+
+```bash
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+```
+
+이 단계에서는 컨테이너가 종료된 뒤에도 로그를 확인할 수 있음을 확인했다.
+
+---
+
+### 7-4. 리소스 사용량 확인
+
+```bash
+docker run -d --name ubuntu-stats ubuntu sleep infinity
+docker stats --no-stream ubuntu-stats
+```
+
+예시 출력:
+
+```bash
+CONTAINER ID   NAME          CPU %   MEM USAGE / LIMIT   MEM %
+...            ubuntu-stats  ...     ...                 ...
+```
+
+이 단계에서는 실행 중인 컨테이너의 CPU 및 메모리 사용량을 확인했다.
+
+---
+
+### 7-5. 결과 로그 위치
+
+```bash
+$BASE_DIRECTORY/02_docker/docker_check_log
+```
 
 ---
 
 ## 8. 5단계: 컨테이너 실행 실습
 
-추후 작성 예정.
+이 단계 역시 `00_run_docker_check.sh` 스크립트 안에서 함께 수행했다.
 
-예정 항목:
+### 8-1. hello-world 실행 성공 확인
 
-- `docker pull ubuntu`
-- `docker run -it ubuntu bash`
-- 내부 명령: `ls`, `echo`, `pwd`
-- `attach`, `exec` 차이 정리
+```bash
+docker run hello-world
+```
+
+hello-world 컨테이너는 실행 후 바로 종료되며, Docker 설치가 정상적으로 동작함을 보여주는 기본 테스트로 사용했다.
+
+---
+
+### 8-2. ubuntu 컨테이너 실행 후 내부 명령 수행
+
+```bash
+docker run -dit --name ubuntu-cli-test ubuntu bash
+docker exec ubuntu-cli-test bash -lc "ls; echo 'hello from ubuntu container'; pwd"
+```
+
+예시 출력:
+
+```bash
+bin
+boot
+dev
+etc
+home
+...
+
+hello from ubuntu container
+/
+```
+
+이 단계에서는 컨테이너 내부 파일 시스템이 호스트와 분리된 환경이라는 점을 확인했다.
+
+---
+
+### 8-3. attach 와 exec 차이 정리
+
+#### attach
+- 이미 실행 중인 컨테이너의 주 프로세스에 직접 붙는다.
+- 컨테이너가 포그라운드 프로그램처럼 동작할 때 상태를 그대로 볼 수 있다.
+- 잘못 다루면 메인 프로세스 종료와 연결될 수 있다.
+
+#### exec
+- 실행 중인 컨테이너 안에서 새 명령을 별도로 실행한다.
+- 점검, 디버깅, 일회성 명령 실행에 더 안전하고 자주 사용된다.
+
+이번 실습에서는 `docker exec`를 사용해 ubuntu 컨테이너 내부에서 `ls`, `echo`, `pwd`를 실행했다.
 
 ---
 
 ## 9. 6단계: Dockerfile 기반 커스텀 이미지 제작
 
-추후 작성 예정.
+### 9-1. 사용 스크립트
 
-예정 항목:
+커스텀 웹 서버 이미지는 `01_run_custom_web.sh` 스크립트로 진행했다.
 
-- 베이스 이미지 선택
-- Dockerfile 작성
-- 이미지 빌드
-- 컨테이너 실행
+실행 방법:
+
+```bash
+chmod +x $BASE_DIRECTORY/02_docker/01_run_custom_web.sh
+cd $BASE_DIRECTORY/02_docker
+./01_run_custom_web.sh
+```
+
+실행 결과는 아래 파일에 기록된다.
+
+```bash
+$BASE_DIRECTORY/02_docker/custom_web_log
+```
+
+---
+
+### 9-2. 선택한 베이스 이미지
+
+이번 단계에서는 기존 웹 서버 베이스 이미지인 `nginx:alpine`을 사용했다.
+
+선택 이유:
+- 가볍고 빠르게 실행 가능
+- 정적 HTML 파일 배포에 적합
+- 포트 매핑과 웹 접속 확인이 쉬움
+
+---
+
+### 9-3. Dockerfile
+
+파일 위치:
+
+```bash
+$BASE_DIRECTORY/02_docker/web/Dockerfile
+```
+
+내용:
+
+```dockerfile
+FROM nginx:alpine
+
+LABEL org.opencontainers.image.title="codyssey-custom-nginx"
+LABEL org.opencontainers.image.description="Custom NGINX image for codyssey workstation mission"
+
+ENV APP_ENV=dev
+
+COPY site/ /usr/share/nginx/html/
+
+EXPOSE 80
+```
+
+---
+
+### 9-4. 커스텀 포인트와 목적
+
+- `FROM nginx:alpine`
+  - 기존 베이스 이미지를 재사용하여 빠르게 웹 서버 환경을 구성하기 위함
+- `ENV APP_ENV=dev`
+  - 환경 변수 설정 예시를 포함하기 위함
+- `COPY site/ /usr/share/nginx/html/`
+  - 내가 만든 정적 콘텐츠를 NGINX 기본 문서 루트에 배치하기 위함
+- `EXPOSE 80`
+  - 컨테이너 내부 서비스 포트를 명시하기 위함
+
+---
+
+### 9-5. 빌드 명령
+
+```bash
+docker build -t codyssey-custom-web:1.0 ./web
+```
+
+예시 출력:
+
+```bash
+Successfully built ...
+Successfully tagged codyssey-custom-web:1.0
+```
 
 ---
 
 ## 10. 7단계: 포트 매핑 검증
 
-추후 작성 예정.
+### 10-1. 포트 매핑 실행
 
-예정 항목:
+`01_run_custom_web.sh` 스크립트에서 아래 명령으로 컨테이너를 실행했다.
 
-- `docker run -d -p <host_port>:<container_port> ...`
-- 브라우저 접속 화면 또는 `curl` 응답 첨부
+```bash
+docker run -d -p 8080:80 --name codyssey-web-8080 codyssey-custom-web:1.0
+```
+
+의미:
+- 호스트 포트: `8080`
+- 컨테이너 포트: `80`
+
+즉, 브라우저에서 `localhost:8080`으로 접속하면 컨테이너 내부의 NGINX 80번 포트와 연결된다.
+
+---
+
+### 10-2. 접속 확인
+
+```bash
+curl http://localhost:8080
+```
+
+브라우저 주소:
+
+```bash
+http://localhost:8080
+```
+
+예시 출력 일부:
+
+```html
+<h1>Custom NGINX Container</h1>
+```
+
+---
+
+### 10-3. 결과 로그 위치
+
+```bash
+$BASE_DIRECTORY/02_docker/custom_web_log
+```
+
+---
+
+### 10-4. 포트 매핑이 필요한 이유
+
+컨테이너는 기본적으로 호스트와 격리된 네트워크 환경에서 실행된다.  
+따라서 컨테이너 내부 포트만 열려 있어서는 브라우저에서 바로 접근할 수 없다.  
+`-p 호스트포트:컨테이너포트` 옵션을 사용해야 호스트에서 서비스에 접근할 수 있다.
 
 ---
 
 ## 11. 8단계: 바인드 마운트 검증
 
-추후 작성 예정.
+### 11-1. 바인드 마운트 실행
+
+같은 `01_run_custom_web.sh` 스크립트에서 호스트의 `site/` 디렉토리를 컨테이너 내부 NGINX 웹 루트에 연결했다.
+
+```bash
+docker run -d -p 8081:80 \
+  -v $BASE_DIRECTORY/02_docker/web/site:/usr/share/nginx/html \
+  --name codyssey-web-bind \
+  nginx:alpine
+```
+
+---
+
+### 11-2. 접속 확인
+
+```bash
+curl http://localhost:8081
+```
+
+브라우저 주소:
+
+```bash
+http://localhost:8081
+```
+
+---
+
+### 11-3. 변경 반영 확인 방법
+
+호스트에서 `$BASE_DIRECTORY/02_docker/web/site/index.html` 내용을 수정한 뒤 같은 주소로 다시 접속하면 변경 사항이 즉시 반영된다.
+
+예를 들어 아래 문구를 수정한다.
+
+기존:
+
+```html
+<h1>Custom NGINX Container</h1>
+```
+
+수정 후:
+
+```html
+<h1>Bind Mount Updated</h1>
+```
+
+이후 다시 접속:
+
+```bash
+curl http://localhost:8081
+```
+
+예시 출력 일부:
+
+```html
+<h1>Bind Mount Updated</h1>
+```
+
+이 결과를 통해 호스트 파일 수정이 컨테이너 내부에 즉시 반영됨을 확인할 수 있다.
+
+---
+
+### 11-4. 바인드 마운트 특징 정리
+
+- 호스트 파일을 바로 수정하면 컨테이너에도 즉시 반영된다.
+- 개발 중 빠른 확인에 편리하다.
+- 반면, 호스트 디렉토리 구조에 의존성이 생긴다.
 
 ---
 
 ## 12. 9단계: 볼륨 영속성 검증
 
-추후 작성 예정.
+### 12-1. 사용 스크립트
+
+볼륨 영속성 검증은 `02_run_volume_test.sh` 스크립트로 진행했다.
+
+실행 방법:
+
+```bash
+chmod +x $BASE_DIRECTORY/02_docker/02_run_volume_test.sh
+cd $BASE_DIRECTORY/02_docker
+./02_run_volume_test.sh
+```
+
+실행 결과는 아래 파일에 기록된다.
+
+```bash
+$BASE_DIRECTORY/02_docker/volume_test_log
+```
 
 ---
+
+### 12-2. 기존 테스트 흔적 정리
+
+스크립트는 재현성을 위해 먼저 기존 컨테이너와 볼륨 흔적을 정리한다.
+
+```bash
+docker rm -f vol-test >/dev/null 2>&1 || true
+docker rm -f vol-test2 >/dev/null 2>&1 || true
+docker volume rm codyssey-data >/dev/null 2>&1 || true
+```
+
+---
+
+### 12-3. 볼륨 생성
+
+```bash
+docker volume create codyssey-data
+```
+
+예시 출력:
+
+```bash
+codyssey-data
+```
+
+---
+
+### 12-4. 첫 번째 컨테이너에 데이터 저장
+
+```bash
+docker run -d --name vol-test -v codyssey-data:/data ubuntu sleep infinity
+docker exec vol-test bash -lc "echo hi > /data/hello.txt && cat /data/hello.txt"
+```
+
+예시 출력:
+
+```bash
+hi
+```
+
+---
+
+### 12-5. 컨테이너 삭제 후 새 컨테이너 연결
+
+```bash
+docker rm -f vol-test
+docker run -d --name vol-test2 -v codyssey-data:/data ubuntu sleep infinity
+docker exec vol-test2 bash -lc "cat /data/hello.txt"
+```
+
+예시 출력:
+
+```bash
+hi
+```
+
+---
+
+### 12-6. 결과 해석
+
+첫 번째 컨테이너를 삭제한 뒤 두 번째 컨테이너를 새로 생성했음에도 `/data/hello.txt`가 그대로 남아 있었다.  
+이로써 데이터가 컨테이너 자체가 아니라 Docker 볼륨에 저장되어 영속적으로 유지됨을 확인했다.
+
+---
+
+### 12-7. 볼륨과 바인드 마운트 차이
+
+- 바인드 마운트
+  - 호스트의 특정 폴더를 직접 연결
+  - 개발 중 파일 수정 반영에 적합
+- 볼륨
+  - Docker가 관리하는 저장소
+  - 컨테이너 삭제 후에도 데이터 유지에 적합
 
 ## 13. 10단계: Git 설정 및 GitHub / VSCode 연동
 
@@ -468,44 +961,79 @@ drwxr-xr-x /Users/xifoxy.ru1115/__dev/codyssey_week_01/permission_test_dir
 
 예정 항목:
 
+- `git config --global user.name`
+- `git config --global user.email`
+- `git config --global init.defaultBranch`
 - `git config --list`
-- 사용자 정보 설정
-- 기본 브랜치 설정
-- GitHub 로그인 및 저장소 연동
+- VSCode GitHub 로그인
+- 원격 저장소 연동
+- 스크린샷 첨부
 
 ---
 
 ## 14. 트러블슈팅
 
-현재까지 기록 예정 항목:
+### 14-1. `pwd` 결과가 실행 위치에 따라 달라지는 문제
 
-1. `pwd` 결과가 실행 위치에 따라 달라지는 문제  
-   - 원인: 스크립트 실행 위치가 고정되지 않음
-   - 해결: `cd "$BASE"` 추가
-
-2. 화면 출력과 로그 출력의 일관성이 어긋나는 문제  
-   - 원인: 일부 단계에서 로그는 `grep`, 화면은 전체 `ls` 사용
-   - 해결: 동일 명령으로 통일
+- 문제: 스크립트를 실행하는 위치에 따라 `pwd` 결과가 달라져, README에 기록한 예상 경로와 실제 출력이 일치하지 않는 문제가 있었다.
+- 원인 가설: 스크립트 시작 위치가 고정되지 않아서, 현재 셸의 작업 디렉토리에 따라 결과가 달라졌다고 판단했다.
+- 확인: 스크립트 내부에서 기준 경로를 명시하지 않은 상태로 실행하면, `pwd` 가 스크립트 파일 위치가 아니라 사용자가 실행한 현재 위치를 출력할 수 있음을 확인했다.
+- 해결: `BASE="$(cd "$(dirname "$0")" && pwd)"` 로 스크립트 위치를 기준 경로로 잡고, `cd "$BASE"` 를 추가하여 작업 디렉토리를 고정했다. 이 방식으로 실행 위치와 관계없이 동일한 경로 기준으로 로그를 기록할 수 있게 정리했다.
 
 ---
 
+### 14-2. Docker가 자꾸 꺼지는 문제 (`attach` 사용 시)
+
+- 문제: ubuntu 컨테이너에 접근하는 과정에서 컨테이너가 자꾸 종료되거나, 터미널에서 빠져나온 뒤 컨테이너가 꺼진 것처럼 보이는 문제가 있었다.
+- 원인 가설: `docker attach` 는 실행 중인 컨테이너의 **주 프로세스**에 직접 연결되기 때문에, 종료 입력이나 세션 종료가 곧 메인 프로세스 종료와 연결될 수 있다고 판단했다.
+- 확인: `attach` 방식은 컨테이너 안에서 별도의 점검 명령을 안전하게 실행하는 데 적합하지 않았고, 실습 목적상 `ls`, `echo`, `pwd` 같은 단순 확인 작업에는 오히려 불편했다. 반면 `docker exec ubuntu-cli-test bash -lc "ls; echo 'hello from ubuntu container'; pwd"` 방식은 이미 실행 중인 컨테이너 안에서 별도 명령만 실행하므로, 컨테이너 상태를 유지한 채 점검이 가능했다.
+- 해결: 컨테이너 내부 확인 방식은 `attach` 대신 `docker exec` 중심으로 변경했다. 실제 Docker 점검 스크립트에서도 ubuntu 컨테이너를 `docker run -dit --name ubuntu-cli-test ubuntu bash` 로 띄운 뒤, 내부 명령은 `docker exec` 로 수행하도록 구성했다. 이 방식으로 컨테이너가 불필요하게 종료되는 문제를 줄이고, 점검 절차를 더 안정적으로 재현할 수 있었다.
+
+---
+
+### 14-3. Docker 데몬 연결 실패 문제
+
+- 문제: `docker --version` 은 동작하지만 `docker info` 가 실패하는 경우가 있었다.
+- 원인 가설: Docker CLI 는 설치되어 있지만, Docker 엔진이 실행 중이 아니었을 가능성이 있었다.
+- 확인: `docker --version` 은 클라이언트 설치 여부만 보여주지만, `docker info` 는 서버(데몬)와 연결되어야 정상적으로 응답한다는 점을 기준으로 차이를 확인했다.
+- 해결: OrbStack을 먼저 실행한 뒤 다시 `docker info` 를 실행하도록 절차를 정리했다. 현재 Docker 점검 스크립트도 `docker info` 실패 시 OrbStack 실행 여부를 먼저 확인하라는 메시지를 출력하도록 구성했다.
+
 ## 15. 배운 점
 
-### 절대 경로와 상대 경로
+### 15-1. 절대 경로와 상대 경로
+
 - 절대 경로는 루트(`/`)부터 시작하는 전체 경로이다.
 - 상대 경로는 현재 위치를 기준으로 해석되는 경로이다.
 
 예시:
-- 절대 경로: `/Users/xifoxy.ru1115/__dev/codyssey_week_01`
-- 상대 경로: `./run_step.sh`
+- 절대 경로: `$BASE_DIRECTORY`
+- 상대 경로: `./entry.sh`
 
-### 파일 권한
+---
+
+### 15-2. 파일 권한
+
 - 파일과 디렉토리는 각각 읽기, 쓰기, 실행 권한을 가진다.
 - 숫자 권한 표기(예: 755, 644)는 권한 조합을 숫자로 나타낸 것이다.
 
 ---
 
+### 15-3. 포트 매핑
+
+- 컨테이너 내부 서비스는 기본적으로 외부에서 바로 접근할 수 없다.
+- 호스트 포트와 컨테이너 포트를 연결해야 브라우저나 `curl`로 접근할 수 있다.
+
+---
+
+### 15-4. 볼륨 영속성
+
+- 컨테이너는 삭제될 수 있지만, 볼륨은 별도로 유지할 수 있다.
+- 따라서 중요한 데이터는 컨테이너 내부가 아니라 볼륨에 저장하는 것이 적절하다.
+
+---
+
 ## 16. 참고
 
-- 모든 로그와 스크린샷에는 민감한 정보가 포함되지 않도록 주의한다.
-- README는 이후 Docker, Git, GitHub 연동 내용을 계속 이어서 추가할 예정이다.
+- README에는 명령어와 예시 출력뿐 아니라 실제 실행 로그 파일 위치도 함께 기록했다.
+- 최종 제출 시에는 브라우저 접속 화면, VSCode 연동 화면, GitHub 저장소 화면 등 시각적 증거를 함께 첨부한다.
+- 민감한 정보(토큰, 비밀번호, 개인키)는 로그나 스크린샷에 포함되지 않도록 반드시 마스킹한다.
