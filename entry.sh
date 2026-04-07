@@ -17,6 +17,9 @@ printf "git: %s\n\n" "$GIT_VER"
 chmod +x "$BASE/cls.sh" \
     "$BASE/start.sh" >/dev/null 2>&1
 
+chmod +x "$BASE/bonus_start.sh \
+    "$BASE/bonus_cls.sh >/dev/null 2>&1
+
 chmod +x "$BASE/00_cli/cls_cli.sh" \
     "$BASE/00_cli/run_cli.sh" >/dev/null 2>&1
 
@@ -31,7 +34,10 @@ chmod +x "$BASE/02_docker/00_run_docker_check.sh" \
 chmod +x "$BASE/03_github/run_git.sh" \
     "$BASE/03_github/cls_github.sh" >/dev/null 2>&1
 
-chmod +x "$BASE/04_bonus/run_bonus.sh" \
-    "$BASE/04_bonus/cls_bonus.sh" >/dev/null 2>&1
+chmod +x "$BASE/04_bonus_compose/run_bonus_compose.sh" \
+    "$BASE/04_bonus_compose/cls_bonus_compose.sh" >/dev/null 2>&1
+
+chmod +x "$BASE/05_bonus_github/run_bonus_git.sh" \
+    "$BASE/05_bonus_github/cls_bonus_git.sh" >/dev/null
 
 sh $BASE/start.sh
