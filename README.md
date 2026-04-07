@@ -957,17 +957,68 @@ hi
 
 ## 13. 10단계: Git 설정 및 GitHub / VSCode 연동
 
-추후 작성 예정.
+### 13-1. Git 사용자 정보 및 기본 브랜치 설정
 
-예정 항목:
+Git 사용자 정보와 기본 브랜치 이름을 아래와 같이 설정했다.
 
-- `git config --global user.name`
-- `git config --global user.email`
-- `git config --global init.defaultBranch`
-- `git config --list`
-- VSCode GitHub 로그인
-- 원격 저장소 연동
-- 스크린샷 첨부
+```bash
+git config --global user.name "사용할 이름"
+git config --global user.email "사용할이메일@example.com"
+git config --global init.defaultBranch main
+git config --list
+```
+
+확인 명령:
+
+```bash
+git config --global user.name
+git config --global user.email
+git config --global init.defaultBranch
+```
+
+이 단계에서는 커밋 작성자 정보와 기본 브랜치 이름이 올바르게 반영되는지 확인했다.
+
+---
+
+### 13-2. 저장소 초기화 및 원격 저장소 연결
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/깃허브아이디/저장소이름.git
+git branch -M main
+git push -u origin main
+```
+
+이 단계에서는 로컬 저장소를 초기화하고, GitHub 원격 저장소와 연결한 뒤 첫 푸시를 수행했다.
+
+---
+
+### 13-3. VS Code GitHub 연동 및 저장소 확인
+
+VS Code에서 GitHub 저장소를 열고 Source Control 패널을 통해 저장소가 정상적으로 인식되는지 확인했다.  
+Git 사용자 정보와 원격 저장소 연결 정보는 CLI 스크립트로 함께 점검했다.
+
+확인 항목:
+- Git 사용자 이름 설정 여부
+- Git 사용자 이메일 설정 여부
+- 기본 브랜치 설정 여부
+- 전체 Git 설정 확인
+- 원격 저장소(remote) 연결 정보 확인
+- VS Code에서 저장소 열기 및 Source Control 패널 접근 확인
+
+확인 방법:
+
+```bash
+git config --global user.name
+git config --global user.email
+git config --global init.defaultBranch
+git config --list
+git config --list | grep remote
+```
+
+![캡처](./img/vscode.png)
 
 ---
 
@@ -976,7 +1027,7 @@ hi
 ### 14-1. `pwd` 결과가 실행 위치에 따라 달라지는 문제
 
 - 문제: 스크립트를 실행하는 위치에 따라 `pwd` 결과가 달라져, README에 기록한 예상 경로와 실제 출력이 일치하지 않는 문제가 있었다.
-- 원인 가설: 스크립트 시작 위치가 고정되지 않아서, 현재 셸의 작업 디렉토리에 따라 결과가 달라졌다고 판단했다.
+- 원인: 스크립트 시작 위치가 고정되지 않아서, 현재 셸의 작업 디렉토리에 따라 결과가 달라졌다고 판단했다.
 - 확인: 스크립트 내부에서 기준 경로를 명시하지 않은 상태로 실행하면, `pwd` 가 스크립트 파일 위치가 아니라 사용자가 실행한 현재 위치를 출력할 수 있음을 확인했다.
 - 해결: `BASE="$(cd "$(dirname "$0")" && pwd)"` 로 스크립트 위치를 기준 경로로 잡고, `cd "$BASE"` 를 추가하여 작업 디렉토리를 고정했다. 이 방식으로 실행 위치와 관계없이 동일한 경로 기준으로 로그를 기록할 수 있게 정리했다.
 
@@ -985,7 +1036,7 @@ hi
 ### 14-2. Docker가 자꾸 꺼지는 문제 (`attach` 사용 시)
 
 - 문제: ubuntu 컨테이너에 접근하는 과정에서 컨테이너가 자꾸 종료되거나, 터미널에서 빠져나온 뒤 컨테이너가 꺼진 것처럼 보이는 문제가 있었다.
-- 원인 가설: `docker attach` 는 실행 중인 컨테이너의 **주 프로세스**에 직접 연결되기 때문에, 종료 입력이나 세션 종료가 곧 메인 프로세스 종료와 연결될 수 있다고 판단했다.
+- 원인: `docker attach` 는 실행 중인 컨테이너의 **주 프로세스**에 직접 연결되기 때문에, 종료 입력이나 세션 종료가 곧 메인 프로세스 종료와 연결될 수 있다고 판단했다.
 - 확인: `attach` 방식은 컨테이너 안에서 별도의 점검 명령을 안전하게 실행하는 데 적합하지 않았고, 실습 목적상 `ls`, `echo`, `pwd` 같은 단순 확인 작업에는 오히려 불편했다. 반면 `docker exec ubuntu-cli-test bash -lc "ls; echo 'hello from ubuntu container'; pwd"` 방식은 이미 실행 중인 컨테이너 안에서 별도 명령만 실행하므로, 컨테이너 상태를 유지한 채 점검이 가능했다.
 - 해결: 컨테이너 내부 확인 방식은 `attach` 대신 `docker exec` 중심으로 변경했다. 실제 Docker 점검 스크립트에서도 ubuntu 컨테이너를 `docker run -dit --name ubuntu-cli-test ubuntu bash` 로 띄운 뒤, 내부 명령은 `docker exec` 로 수행하도록 구성했다. 이 방식으로 컨테이너가 불필요하게 종료되는 문제를 줄이고, 점검 절차를 더 안정적으로 재현할 수 있었다.
 
@@ -1037,3 +1088,108 @@ hi
 - README에는 명령어와 예시 출력뿐 아니라 실제 실행 로그 파일 위치도 함께 기록했다.
 - 최종 제출 시에는 브라우저 접속 화면, VSCode 연동 화면, GitHub 저장소 화면 등 시각적 증거를 함께 첨부한다.
 - 민감한 정보(토큰, 비밀번호, 개인키)는 로그나 스크린샷에 포함되지 않도록 반드시 마스킹한다.
+
+
+---
+
+## 17. BONUS_Docker Compose
+
+### 17-1. Docker Compose를 사용한 이유
+
+이번 보너스 과제에서는 `nginx`, `wordpress`, `mariadb` 컨테이너를 Docker Compose로 함께 구성하였다.  
+기존에는 여러 컨테이너를 각각 `docker run` 명령으로 실행해야 했지만, Compose를 사용하면 실행 설정을 `compose.yaml` 파일에 한 번 정리해두고 동일한 환경을 반복해서 쉽게 재현할 수 있다.
+
+즉, Docker Compose는 컨테이너 실행 명령을 단순한 일회성 입력이 아니라 **문서화된 실행 설정**으로 관리할 수 있게 해준다.
+
+### 17-2. 서비스 구성
+
+이번 실습에서는 다음 3개의 서비스를 구성하였다.
+
+- `nginx` : 외부 요청을 받는 프록시 서버
+- `wordpress` : 웹 애플리케이션 서버
+- `mariadb` : WordPress가 사용하는 데이터베이스 서버
+
+구조는 다음과 같다.
+
+브라우저 → `localhost:80` → `nginx` → `wordpress` → `mariadb`
+
+즉, 사용자는 브라우저에서 `localhost` 로 접속하지만, 실제로는 Docker가 호스트의 80번 포트를 nginx 컨테이너의 80번 포트와 연결해 주고, nginx는 다시 내부 Docker 네트워크를 통해 WordPress로 요청을 전달한다.
+
+### 17-3. 포트 포워딩
+
+Compose 설정에서 nginx에는 다음과 같이 포트를 지정하였다.
+
+- `80:80`
+
+이 의미는 다음과 같다.
+
+- 왼쪽 `80` : 호스트(내 컴퓨터)의 80번 포트
+- 오른쪽 `80` : nginx 컨테이너 내부의 80번 포트
+
+따라서 브라우저에서 `http://localhost` 로 접속하면 요청이 nginx 컨테이너로 전달된다.
+
+반면 WordPress와 MariaDB는 외부에 직접 포트를 공개하지 않았기 때문에 브라우저에서 직접 접근할 수 없고, Docker 내부 네트워크에서만 통신하도록 구성하였다.
+
+### 17-4. 프록시 패스(proxy_pass)
+
+nginx는 직접 페이지를 생성하지 않고, 내부 네트워크의 WordPress 컨테이너로 요청을 넘기도록 설정하였다.
+
+예를 들어 `/` 경로로 들어온 요청은 내부적으로 `wordpress:80` 으로 전달된다.  
+이때 사용한 것이 `proxy_pass` 설정이다.
+
+이 방식의 장점은 다음과 같다.
+
+- 외부에는 nginx만 노출할 수 있다.
+- WordPress는 내부 서비스로 숨길 수 있다.
+- 프록시 서버를 앞단에 두는 구조를 경험할 수 있다.
+
+즉, nginx는 외부 요청을 받아 내부 서비스로 전달하는 **게이트웨이 역할**을 수행한다.
+
+### 17-5. 내부 네트워크와 서비스 이름 기반 통신
+
+Docker Compose를 실행하면 프로젝트 전용 네트워크가 자동으로 생성된다.  
+그리고 같은 Compose에 속한 서비스들은 이 네트워크에 함께 연결된다.
+
+이때 Compose의 서비스 이름은 내부 DNS처럼 동작한다.
+
+예를 들어 다음과 같이 사용할 수 있다.
+
+- `wordpress` : WordPress 컨테이너 주소처럼 사용
+- `mariadb` : MariaDB 컨테이너 주소처럼 사용
+
+그래서 nginx는 WordPress의 실제 IP를 몰라도 `wordpress:80` 으로 요청을 전달할 수 있고, WordPress도 `mariadb:3306` 으로 데이터베이스에 접속할 수 있다.
+
+즉, 컨테이너끼리 서로 통신할 수 있는 이유는 다음과 같다.
+
+- 같은 Docker Compose 네트워크에 연결되어 있고
+- Compose가 서비스 이름 기반 내부 DNS를 제공하기 때문이다
+
+이 구조를 통해 Docker Compose의 **서비스 디스커버리** 개념을 확인할 수 있었다.
+
+### 17-6. WordPress와 MariaDB 연동
+
+WordPress는 실행 시 데이터베이스 접속 정보를 환경 변수로 전달받도록 구성하였다.  
+예를 들어 데이터베이스 호스트는 `mariadb:3306`, 데이터베이스 이름은 `wordpress` 와 같이 설정하였다.
+
+MariaDB 컨테이너는 시작되면서 WordPress가 사용할 데이터베이스와 계정을 생성하고, WordPress는 그 계정으로 접속해 필요한 테이블을 자동으로 구성하였다.
+
+설치 완료 후에는 MariaDB 내부를 조회하여 다음 내용을 확인하였다.
+
+- `wp_options` 테이블에 `siteurl`, `home` 값이 저장되었는지
+- `wp_users` 테이블에 관리자 계정이 생성되었는지
+
+이를 통해 단순히 화면만 보이는 것이 아니라, 실제로 WordPress와 데이터베이스가 정상적으로 연동되어 동작함을 확인하였다.
+
+### 17-7. Compose 운영 명령어
+
+이번 실습에서는 다음과 같은 Docker Compose 명령어를 사용하였다.
+
+- `docker compose up -d` : 서비스 실행
+- `docker compose down` : 서비스 종료
+- `docker compose ps` : 컨테이너 상태 확인
+- `docker compose logs` : 전체 로그 확인
+- `docker compose logs nginx` : nginx 로그 확인
+- `docker compose logs wordpress` : WordPress 로그 확인
+- `docker compose logs mariadb` : MariaDB 로그 확인
+
+이 과정을 통해 여러 컨테이너를 함께 실행하는 것뿐 아니라, 운영 관점에서 상태와 로그를 점검하는 흐름도 함께 익힐 수 있었다.
