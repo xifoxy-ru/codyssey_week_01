@@ -28,4 +28,7 @@ chmod +x "$BASE/02_docker/00_run_docker_check.sh" \
     "$BASE/02_docker/02_run_volume_test.sh" \
     "$BASE/02_docker/cls_docker.sh" >/dev/null 2>&1
 
+chmod +x "$BASE/03_github/run_git.sh" \
+    "$BASE/03_github/cls_github.sh" >/dev/null 2>&1
+
 sh $BASE/start.sh
