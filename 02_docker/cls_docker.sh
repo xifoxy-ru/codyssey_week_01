@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
-
 BASE="$(cd "$(dirname "$0")" && pwd)"
 
 rm -f "$BASE/docker_check_log" \

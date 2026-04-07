@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
-
 BASE="$(cd "$(dirname "$0")" && pwd)"
 rm -f "$BASE/permission_log" >/dev/null 2>&1
 rm -f "$BASE/permission_test_file" >/dev/null 2>&1
