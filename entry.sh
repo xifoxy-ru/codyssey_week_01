@@ -31,4 +31,7 @@ chmod +x "$BASE/02_docker/00_run_docker_check.sh" \
 chmod +x "$BASE/03_github/run_git.sh" \
     "$BASE/03_github/cls_github.sh" >/dev/null 2>&1
 
+chmod +x "$BASE/04_bonus/run_bonus.sh" \
+    "$BASE/04_bonus/cls_bonus.sh" >/dev/null 2>&1
+
 sh $BASE/start.sh
