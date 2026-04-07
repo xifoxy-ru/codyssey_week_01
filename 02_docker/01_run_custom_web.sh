@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 BASE=~/__dev/codyssey_week_01/02_docker
 WEB_DIR="$BASE/web"

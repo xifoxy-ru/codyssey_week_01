@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 BASE=~/__dev/codyssey_week_01/02_docker
 LOG="$BASE/volume_test_log"

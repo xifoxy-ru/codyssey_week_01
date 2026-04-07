@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 BASE="$(cd "$(dirname "$0")" && pwd)"
 LOG="$BASE/bonus_demo_log"
