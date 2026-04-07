@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE=~/__dev/codyssey_week_01/01_permission
+BASE="$(cd "$(dirname "$0")" && pwd)"
 LOG="$BASE/permission_log"
 
 mkdir -p "$BASE"
