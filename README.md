@@ -711,8 +711,6 @@ EXPOSE 80
 
 - `FROM nginx:alpine`
   - 기존 베이스 이미지를 재사용하여 빠르게 웹 서버 환경을 구성하기 위함
-- `ENV APP_ENV=dev`
-  - 환경 변수 설정 예시를 포함하기 위함
 - `COPY site/ /usr/share/nginx/html/`
   - 내가 만든 정적 콘텐츠를 NGINX 기본 문서 루트에 배치하기 위함
 - `EXPOSE 80`
