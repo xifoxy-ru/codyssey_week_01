@@ -49,7 +49,7 @@ run_step "0단계: Docker Compose 서비스 상태 확인" \
   'docker compose ps'
 
 run_step "0단계: Docker Compose 서비스 상태 확인" \
-  'docker compose up'
+  'docker compose up -d'
 
 run_step "2단계: Nginx/WordPress 메인 페이지 응답 헤더 확인" \
   'curl -I '"$HOST_URL"
