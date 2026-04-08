@@ -1,5 +1,5 @@
 #!/bin/bash
-BASE="$(cd "$(dirname "$0")" && pwd)"
+BASE="$(cd "$(dirname "$0")" && pwd -P)"
 
 rm -f "$BASE/docker_check_log" \
     "$BASE/custom_web_log" \

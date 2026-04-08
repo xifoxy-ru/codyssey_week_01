@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE="$(cd "$(dirname "$0")" && pwd)"
+BASE="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$BASE/.." && pwd)"
 LOG="$BASE/github_log"
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE="$(cd "$(dirname "$0")" && pwd)"
+BASE="$(cd "$(dirname "$0")" && pwd -P)"
 LOG="$BASE/cli_log"
 
 mkdir -p "$BASE"

@@ -1,3 +1,3 @@
 #!/bin/bash
-BASE="$(cd "$(dirname "$0")" && pwd)"
+BASE="$(cd "$(dirname "$0")" && pwd -P)"
 rm -f "$BASE/github_log" >/dev/null 2>&1

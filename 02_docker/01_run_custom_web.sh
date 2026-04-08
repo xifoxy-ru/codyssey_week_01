@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE=~/__dev/codyssey_week_01/02_docker
+BASE="$(cd "$(dirname "$0")" && pwd -P)"
 WEB_DIR="$BASE/web"
 LOG="$BASE/custom_web_log"
 
@@ -48,6 +48,12 @@ run_step "4단계: [docker run -d -p 8081:80 -v ...] 바인드 마운트 컨테�
   'docker rm -f codyssey-web-bind >/dev/null 2>&1; docker run -d -p 8081:80 -v "$WEB_DIR/site:/usr/share/nginx/html" --name codyssey-web-bind nginx:alpine'
 
 run_step "5단계: [curl http://localhost:8081] 바인드 마운트 접속 확인" \
+  'curl http://localhost:8081'
+
+run_step "6단계: [perl -0pi -e ...] 호스트 index.html 수정" \
+  'perl -0pi -e "s/Custom NGINX Container/Bind Mount Updated/g" "$WEB_DIR/site/index.html"'
+
+run_step "7단계: [curl http://localhost:8081] 수정 반영 재확인" \
   'curl http://localhost:8081'
 
 echo

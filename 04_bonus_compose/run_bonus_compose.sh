@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE="$(cd "$(dirname "$0")" && pwd)"
+BASE="$(cd "$(dirname "$0")" && pwd -P)"
 LOG="$BASE/bonus_demo_log"
 
 cd "$BASE" || exit 1

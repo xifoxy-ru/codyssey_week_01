@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE="$(cd "$(dirname "$0")" && pwd)"
+BASE="$(cd "$(dirname "$0")" && pwd -P)"
 
 OS_NAME="mac"
 OS_VER="$(sw_vers -productVersion 2>/dev/null || echo 'unknown')"

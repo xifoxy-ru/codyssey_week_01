@@ -1,5 +1,5 @@
 #!/bin/bash
-BASE="$(cd "$(dirname "$0")" && pwd)"
+BASE="$(cd "$(dirname "$0")" && pwd -P)"
 
 rm -f bonus_demo_log >/dev/null 2>&1
 docker comopsoe down -v >/dev/null 2>&1

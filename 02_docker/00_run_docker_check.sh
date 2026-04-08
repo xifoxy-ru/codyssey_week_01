@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE=~/__dev/codyssey_week_01/02_docker
+BASE="$(cd "$(dirname "$0")" && pwd -P)"
 LOG="$BASE/docker_check_log"
 
 mkdir -p "$BASE"
