@@ -7,3 +7,5 @@ rm -f "$BASE/docker_check_log" \
 
 docker rm -f $(docker ps -aq) >/dev/null 2>&1
 docker rmi -f $(docker images -q) >/dev/null 2>&1
+
+perl -0pi -e "s/Bind Mount Updated/Custom NGINX Container/g" "$BASE/web/site/index.html"

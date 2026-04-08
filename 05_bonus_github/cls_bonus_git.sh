@@ -53,10 +53,9 @@ run_step "3단계: 변경된 origin 확인" \
 
 echo
 
-rm -f __answer
 rm -f github_ssh_log
+rm -f github_ssh_public_key
 rm -f ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub
 ssh-add -D
-
 
 printf "${YELLOW}HTTPS 복구가 끝났습니다.${RESET}\n"

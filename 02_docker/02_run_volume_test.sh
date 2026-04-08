@@ -47,6 +47,9 @@ run_step "2단계: [docker volume create] Docker 볼륨 생성" \
 run_step "3단계: [docker run -d --name vol-test -v codyssey-data:/data ubuntu sleep infinity] 첫 번째 컨테이너 실행" \
   'docker run -d --name "$CONTAINER_ONE" -v "$VOLUME_NAME:/data" ubuntu sleep infinity'
 
+run_step "3-1단계: [docker ps] 첫 번째 컨테이너 실행 상태 확인" \
+  'docker ps'
+
 run_step "4단계: [docker exec vol-test bash -lc] 볼륨에 데이터 저장" \
   'docker exec "$CONTAINER_ONE" bash -lc "echo hi > /data/hello.txt && cat /data/hello.txt"'
 
@@ -55,6 +58,9 @@ run_step "5단계: [docker rm -f vol-test] 첫 번째 컨테이너 삭제" \
 
 run_step "6단계: [docker run -d --name vol-test2 -v codyssey-data:/data ubuntu sleep infinity] 두 번째 컨테이너 실행" \
   'docker run -d --name "$CONTAINER_TWO" -v "$VOLUME_NAME:/data" ubuntu sleep infinity'
+
+run_step "6-1단계: [docker ps] 두 번째 컨테이너 실행 상태 확인" \
+  'docker ps'
 
 run_step "7단계: [docker exec vol-test2 bash -lc] 데이터 유지 여부 확인" \
   'docker exec "$CONTAINER_TWO" bash -lc "cat /data/hello.txt"'
