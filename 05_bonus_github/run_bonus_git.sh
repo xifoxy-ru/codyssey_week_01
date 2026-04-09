@@ -54,6 +54,11 @@ run_check_step() {
 
 EMAIL="${1:-}"
 
+
+printf "\n"
+printf "${CYAN}================== 05_Bonus_GitHub_SSH ==================${RESET}\n"
+printf '================== 05_Bonus_GitHub_SSH ==================\n' >> "$LOG"
+
 if [ -z "$EMAIL" ]; then
   if [ -t 0 ]; then
     printf "${YELLOW}GitHub SSH 키에 사용할 이메일을 입력하세요: ${RESET}"
@@ -67,10 +72,6 @@ if [ -z "$EMAIL" ]; then
   echo "이메일이 비어 있습니다." | tee -a "$LOG"
   exit 1
 fi
-
-printf "\n"
-printf "${CYAN}================== 05_Bonus_GitHub_SSH ==================${RESET}\n"
-printf '================== 05_Bonus_GitHub_SSH ==================\n' >> "$LOG"
 
 run_check_step "1단계: [git rev-parse --is-inside-work-tree] 현재 위치가 Git 저장소인지 확인" \
   'git rev-parse --is-inside-work-tree' \

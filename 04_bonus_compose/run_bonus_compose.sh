@@ -45,37 +45,37 @@ printf "\n"
 printf "${CYAN}================== 04_BONUS DEMO ==================${RESET}\n"
 printf '================== 04_BONUS DEMO ==================\n' >> "$LOG"
 
-run_step "0단계: Docker Compose 서비스 상태 확인" \
+run_step "1단계: [docker compose ps] Docker Compose 서비스 상태 확인" \
   'docker compose ps'
 
-run_step "0단계: Docker Compose 서비스 상태 확인" \
+run_step "2단계: [docker compose up -d] Docker Compose 서비스 실행" \
   'docker compose up -d'
 
-run_step "2단계: Nginx/WordPress 메인 페이지 응답 헤더 확인" \
+run_step "3단계: [curl -I $HOST_URL] Nginx/WordPress 메인 페이지 응답 헤더 확인" \
   'curl -I '"$HOST_URL"
 
-run_step "3단계: WordPress 메인 페이지 일부 출력" \
+run_step "4단계: [curl -s $HOST_URL| head -n 20] WordPress 메인 페이지 일부 출력" \
   'curl -s '"$HOST_URL"' | head -n 20'
 
-run_step "4단계: MariaDB 컨테이너 접속 확인" \
+run_step "5단계: [docker compose exec -T mariadb ... SELECT VERSION()] MariaDB 컨테이너 접속 확인" \
   'docker compose exec -T mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SELECT VERSION();"'
 
-run_step "5단계: WordPress 데이터베이스 존재 확인" \
+run_step "6단계: [SHOW DATABASES LIKE ...] WordPress 데이터베이스 존재 확인" \
   "docker compose exec -T mariadb mariadb -uroot -p\"$MYSQL_ROOT_PASSWORD\" -e \"SHOW DATABASES LIKE '$DB_NAME';\""
 
-run_step "6단계: WordPress 주요 테이블 존재 확인" \
+run_step "7단계: [SHOW TABLES LIKE ...] WordPress 주요 테이블 존재 확인" \
   "docker compose exec -T mariadb mariadb -uroot -p\"$MYSQL_ROOT_PASSWORD\" \"$DB_NAME\" -e \"SHOW TABLES LIKE 'wp_options'; SHOW TABLES LIKE 'wp_users';\""
 
-run_step "7단계: 사이트 주소(siteurl, home) 값 확인" \
+run_step "8단계: [SELECT ... FROM wp_options] 사이트 주소(siteurl, home) 값 확인" \
   "docker compose exec -T mariadb mariadb -uroot -p\"$MYSQL_ROOT_PASSWORD\" \"$DB_NAME\" -e \"SELECT option_id, option_name, option_value FROM wp_options WHERE option_name IN ('siteurl','home');\""
 
-run_step "8단계: 생성된 사용자 계정 확인" \
+run_step "9단계: [SELECT ... FROM wp_users] 생성된 사용자 계정 확인" \
   "docker compose exec -T mariadb mariadb -uroot -p\"$MYSQL_ROOT_PASSWORD\" \"$DB_NAME\" -e \"SELECT ID, user_login, user_email, display_name, user_registered FROM wp_users;\""
 
-run_step "9단계: 최근 WordPress 로그 확인" \
+run_step "10단계: [docker compose logs --tail=30 wordpress] 최근 WordPress 로그 확인" \
   'docker compose logs --tail=30 wordpress'
 
-run_step "10단계: 최근 MariaDB 로그 확인" \
+run_step "11단계: [docker compose logs --tail=30 mariadb] 최근 MariaDB 로그 확인" \
   'docker compose logs --tail=30 mariadb'
 
 printf "${YELLOW}시연 점검이 끝났습니다.${RESET}\n"
